@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise DevOps Telemetry Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --panel-bg: rgba(22, 27, 34, 0.7);
+            --border-color: #21262d;
+            --neon-blue: #00f0ff;
+            --neon-green: #39ff14;
+            --neon-purple: #bd00ff;
+            --text-muted: #8b949e;
+            --text-bright: #c9d1d9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 240, 255, 0.03) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(189, 0, 255, 0.03) 0px, transparent 50%);
+            color: var(--text-bright);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .brand h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand p {
+            margin: 5px 0 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(57, 255, 20, 0.06);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.1);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 240, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            font-family: monospace;
+            color: #fff;
+            margin: 10px 0;
+        }
+
+        .chart-box {
+            height: 80px;
+            width: 100%;
+        }
+
+        .full-width-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .console {
+            background: #04060a;
+            border-radius: 8px;
+            padding: 15px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column-reverse;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .line {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        .line.i { color: var(--text-muted); }
+        .line.s { color: var(--neon-green); }
+        .line.w { color: var(--neon-blue); }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px var(--neon-green); }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <header>
+        <div class="brand">
+            <h1>PRO_METRIC_SUITE</h1>
+            <p>NODE_ID: web_hardened_edge_01</p>
+        </div>
+        <div class="status-pill">
+            <div class="pulse-dot"></div>
+            <span>SECURE RUNTIME Active</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="grid-layout">
+            <div class="card">
+                <div class="card-meta">
+                    <span class="card-label">CPU CORE LOAD</span>
+                    <span style="color: var(--neon-blue); font-size: 0.8rem; font-family: monospace;">LIMIT 0.25</span>
+                </div>
+                <div class="card-value" id="cpu-txt">0.0%</div>
+                <div class="chart-box">
+                    <canvas id="cpuChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-meta">
+                    <span class="card-label">RAM FOOTPRINT</span>
+                    <span style="color: var(--neon-purple); font-size: 0.8rem; font-family: monospace;">LIMIT 64MB</span>
+                </div>
+                <div class="card-value" id="mem-txt">0.0 MB</div>
+                <div class="chart-box">
+                    <canvas id="memChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-meta">
+                    <span class="card-label">EDGE LATENCY</span>
+                    <span style="color: var(--neon-green); font-size: 0.8rem; font-family: monospace;">HEALTHY</span>
+                </div>
+                <div class="card-value" id="net-txt">0ms</div>
+                <div class="chart-box">
+                    <canvas id="netChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="full-width-panel">
+            <div class="panel-header">
+                <span>SYSTEM SYSLOG STREAM</span>
+                <span style="font-family: monospace; color: var(--neon-blue);">STDOUT</span>
+            </div>
+            <div class="console" id="shell">
+                <div class="line s">[OK] Automated container healthcheck sequence running flawlessly.</div>
+                <div class="line w">[NET] Listening on isolated bridge interface proxy target port 8080.</div>
+                <div class="line i">[SYS] Dropped kernel privileges. Executing process under non-root sub-identity appuser.</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Global telemetry history arrays
+    const historyLimit = 10;
+    const labels = Array(historyLimit).fill('');
+    const cpuData = Array(historyLimit).fill(0);
+    const memData = Array(historyLimit).fill(0);
+    const netData = Array(historyLimit).fill(0);
+
+    // Standard configurations to make sparkline charts look clean
+    const chartOptions = (color) => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        elements: { point: { radius: 0 }, line: { borderCurve: 0.4, borderWidth: 2, borderColor: color } }
+    });
+
+    // Initialize 3 Sparkline charts
+    const cpuChart = new Chart(document.getElementById('cpuChart'), { type: 'line', data: { labels, datasets: [{ data: cpuData }] }, options: chartOptions('#00f0ff') });
+    const memChart = new Chart(document.getElementById('memChart'), { type: 'line', data: { labels, datasets: [{ data: memData }] }, options: chartOptions('#bd00ff') });
+    const netChart = new Chart(document.getElementById('netChart'), { type: 'line', data: { labels, datasets: [{ data: netData }] }, options: chartOptions('#39ff14') });
+
+    function renderTelemetry() {
+        // Generate values fitting our rigid docker compose performance locks
+        const currentCpu = (Math.random() * 8 + 4).toFixed(1);
+        const currentMem = (Math.random() * 4 + 21).toFixed(1);
+        const currentNet = Math.floor(Math.random() * 12 + 6);
+
+        // Update textual readouts
+        document.getElementById('cpu-txt').innerText = `${currentCpu}%`;
+        document.getElementById('mem-txt').innerText = `${currentMem} MB`;
+        document.getElementById('net-txt').innerText = `${currentNet}ms`;
+
+        // Update Chart data queues
+        [
+            { chart: cpuChart, dataArr: cpuData, val: currentCpu },
+            { chart: memChart, dataArr: memData, val: currentMem },
+            { chart: netChart, dataArr: netData, val: currentNet }
+        ].forEach(item => {
+            item.dataArr.push(item.val);
+            item.dataArr.shift();
+            item.chart.update('none'); // Update smoothly without ugly transition stutters
+        });
+
+        // Simulate enterprise stream logging
+        if (Math.random() > 0.65) {
+            const shell = document.getElementById('shell');
+            const variants = [
+                { type: 'i', txt: 'Container base configuration evaluated as safe, running read-only file systems.' },
+                { type: 's', txt: 'HTTP payload distributed cleanly via Nginx proxy buffer.' },
+                { type: 'w', txt: 'Garbage collector execution completed. Tmpfs allocations recycling space.' },
+                { type: 'i', txt: 'Keep-alive connections checked: 0 stalled routing nodes detected.' }
+            ];
+            const pick = variants[Math.floor(Math.random() * variants.length)];
+            const time = new Date().toLocaleTimeString();
+            
+            const logLine = document.createElement('div');
+            logLine.className = `line ${pick.type}`;
+            logLine.innerText = `[${time}] ${pick.type === 's' ? '[OK]' : pick.type === 'w' ? '[WARN]' : '[INFO]'} ${pick.txt}`;
+            
+            shell.insertBefore(logLine, shell.firstChild);
+            if (shell.children.length > 25) shell.removeChild(shell.lastChild);
+        }
+    }
+
+    setInterval(renderTelemetry, 1000);
+    renderTelemetry();
+</script>
+
+</body>
+</html>

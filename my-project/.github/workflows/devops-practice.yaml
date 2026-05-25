@@ -1,0 +1,33 @@
+name: DevOps Build Practice
+
+# 1. TRIGGER: Run this workflow every time someone pushes to the 'main' branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# 2. WORKFLOW JOBS
+jobs:
+  test-and-build:
+    # Tell GitHub to spin up a fresh Ubuntu Linux virtual machine
+    runs-on: ubuntu-latest
+
+    # 3. STEPS TO EXECUTE IN ORDER
+    steps:
+      # Step 1: Clone your repository code onto the Ubuntu runner machine
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Simulate running tests or linting code
+      - name: Run Code Check
+        run: |
+          echo "Verifying code structure..."
+          echo "HTML and Dockerfile validations passed!"
+
+      # Step 3: Simulate building the Docker image to make sure there are no errors
+      - name: Test Docker Build
+        run: |
+          echo "Starting Docker build verification..."
+          docker build -t my-app:${{ github.sha }} .
+          echo "Docker image built successfully on GitHub Runner!"
